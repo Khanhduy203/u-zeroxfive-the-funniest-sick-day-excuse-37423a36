@@ -4,7 +4,7 @@
 // output directory named by MAKEFUN_OUTPUT_DIR (default ./output).
 // Node standard library only: no dependencies, no network, no secrets.
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 // The entry: one breath, half believable, fresh idea, twist at the end.
@@ -35,6 +35,12 @@ if (ENTRY.includes("\n") || ENTRY.includes("\r")) {
 mkdirSync(outDir, { recursive: true });
 const outPath = join(outDir, "entry.txt");
 writeFileSync(outPath, ENTRY, "utf8");
+
+// Round-trip check: what landed on disk must be byte-identical to the
+// entry we validated above (guards against encoding/newline surprises).
+if (readFileSync(outPath, "utf8") !== ENTRY) {
+  fail("entry.txt round-trip mismatch: written content differs from entry");
+}
 
 console.log(`Wrote ${outPath}`);
 console.log(`Entry (${ENTRY.length} chars): ${ENTRY}`);
